@@ -6,8 +6,9 @@ Quick notes:
   else follow the steps mentioned below to run the sourcefiles provided
 
 Steps:
-1) Create a folder called todoapp in C:\Users\Username\todoapp
-2) Extract the contents of the zip file to todoapp folder
+-- Click on 'Clone or download' > Download ZIP
+1) Create a folder called todoapp in say C:\Users\Username\todoapp
+2) Extract the folder 'todo' from the zip file to the todoapp folder you created
 
 3) Open command prompt and type the command
 	>cd todoapp\todo
