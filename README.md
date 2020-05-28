@@ -1,6 +1,5 @@
 # Read me
-### Simple To-Do List that performs basic CRUD operations
-### Created using the Python Web Framework- Django 3.0, HTML ,CSS and Interactive Google Charts
+**Simple To-Do List that performs basic CRUD operations, created using the Python Web Framework- Django 3.0, HTML ,CSS and Interactive Google Charts**
 
 # Requirements
 * **Python 3.0 or higher**
