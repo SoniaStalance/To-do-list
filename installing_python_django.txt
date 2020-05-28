@@ -1,0 +1,48 @@
+-To check whether python is installed type the following cmd in cmd prompt
+	>python
+-You should see it details being displayed, then type the following code to check whether django is installed
+	>import django
+	>print(django.get_version())
+
+-You will see the django version displayed
+
+---------------------------------------------------------Installing Python-----------------------------------------------------------------------
+-If not done, then quickly do so from :-
+	https://www.python.org/downloads/
+
+-After installation add python to your path
+
+---------------------------------------------------------Add Python to path---------------------------------------------------------------------
+In the Windows menu, search for “advanced system settings” and select View advanced system settings.
+
+In the window that appears, click Environment Variables… near the bottom right.
+
+In the next window, find and select the user variable named Path and click Edit… to change its value. 
+The value for this variable is a semi-colon-delimited list of file locations.
+
+Scroll to the end of the value, add a semi-colon, and then add the location of python.exe. 
+(If you do not know where your python.exe is, you can search for it.)
+
+Click OK to save this change.
+
+If you do not have a user variable named Path, click the New… button.
+
+Add a variable named Path and make its value the location of python.exe.
+
+Finding python.exe
+If you do not know where Python was installed, search for python.exe in the Windows menu.
+
+Right-click the file name in the results, select Properties, and find Location.
+
+Copy the location and add it to your path variable.
+
+Confirm addition to path
+Open command prompt and run the command:
+
+	>python
+
+If  Python is installed and added to your path, then its details will be displayed in terminal
+
+---------------------------------------------------------Installing django---------------------------------------------------------------------
+-Open command prompt and type the command
+	> pip install django

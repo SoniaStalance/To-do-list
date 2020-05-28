@@ -1,0 +1,552 @@
+Quick notes:
+-Created by following Dennis Ivy's video tutorial
+	https://www.youtube.com/watch?v=4RWFvXDUmjo
+
+-Changes I've made:
+	1. Design
+	2. Included GoogleCharts
+
+--------------for your reference only
+	//for your reference only
+
+>command line entered in terminal
+
+#comments in python
+
+-todo is project name
+-tasks is app name
+-Task is the name of table created in sqLite, it has the follwing fields (columns)
+	*title	:Char
+	*finished	:Boolean
+	*created	:DateTime
+
+**** I have mentioned my local address and port no 127.0.0.1:8000 , kindly use your own address and port no
+**** admin site can be accessed by http://localaddress:portno/admin
+**** localaddress is mentioned when you runserver
+	>python manage.py runserver
+
+-Incase you aren't building from scratch and just want to run the source files I've provided then kindly use the following details for admin login
+	username	: sonia
+	password : pswd1234
+
+--------------------------------------------Installing django--------------------------------------------
+> pip install django
+--------------------------------------------------PART I--------------------------------------------------
+> mkdir todoapp
+> cd todoapp
+> django-admin startproject todo
+> cd todo
+> python manage.py runserver
+--------------------------------------------------start server
+
+> ctrl + c
+--------------------------------------------------stop server
+
+> python manage.py migrate
+-------------------------------------------------- creates the default tables using sqLite
+
+> python manage.py createsuperuser
+--------------------------------------------------creates super user provide the details
+
+> python manage.py runserver
+--------------------------------------------------go to http://127.0.0.1:8000/admin
+				// provide the username and password
+				// you can now view the admin dashboard
+				// stop server
+
+> python manage.py startapp tasks
+--------------------------------------------------go to settings.py and add 'tasks,' in the installed apps section
+				// go to views.py and add the following code snippet
+from django.http import HttpResponse
+def index(request):
+	return HttpResponse('Hello World')
+
+--------------------------------------------------create urls.py in tasks folder and paste the code
+from django.urls import path
+from . import views
+urlpatterns=[
+path('',views.index)
+]
+
+--------------------------------------------------go to base urls.py file and update the existing code
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('',include('tasks.urls'))
+]
+
+--------------------------------------------------now run server and goto http://127.0.0.1:8000
+				// you are supposed to get Hello World as response
+				// now create folder templates under tasks
+				//and create folder tasks under templates
+				//within which create a file called list.html (i.e tasks/templates/tasks/list.html)
+				//type the following
+<h3>To Do</h3>
+
+--------------------------------------------------now goto views.py and update the code and goto http://127.0.0.1:8000 you should get To Do as response
+from django.shortcuts import render
+from django.http import HttpResponse
+def index(request):
+	return render(request, 'tasks/list.html')
+
+--------------------------------------------------now goto models.py and add the following code (i.e. creating table)
+class Task(models.Model):
+	title=models.CharField(max_length=200)
+	finished=models.BooleanField(default=False)
+	created=models.DateTimeField(auto_now_add=True)
+
+	def __str__(self):
+		return self.title
+				
+--------------------------------------------------now migrate db
+> python manage.py makemigrations
+> python manage.py migrate
+--------------------------------------------------now open admin.py and add the code (i.e. registering the Task module) then run server
+from .models import *
+#registering Task module
+admin.site.register(Task)
+
+--------------------------------------------------now goto http://127.0.0.1:8000/admin and add a few tasks
+				// then open views.py and update the code
+from django.shortcuts import render
+from django.http import HttpResponse
+from .models import *
+# Create your views here.
+def index(request):
+	tasks=Task.objects.all()
+	context={'tasks':tasks}
+	return render(request, 'tasks/list.html',context)
+
+--------------------------------------------------now open list.html and add the code
+{% for task in tasks %}
+	<div>
+		<p>{{task}}</p>
+	</div>
+{% endfor %}
+
+--------------------------------------------------now  goto http://127.0.0.1:8000 and see the tasks rendered
+
+
+
+
+
+ 
+--------------------------------------------------PART II [FORMS]--------------------------------------------------
+				//create forms.py in tasks folder and add the code
+				//form representation of a model
+from django import forms
+from django.forms import ModelForm
+
+from .models import *
+class TaskForm(forms.ModelForm):
+	
+	class Meta:
+		model=Task
+		fields='__all__'
+
+--------------------------------------------------now open views.py and update the code
+from django.shortcuts import render
+from django.http import HttpResponse
+
+from .models import *
+from .forms import *
+# Create your views here.
+def index(request):
+	tasks=Task.objects.all()
+
+	form=TaskForm()
+
+	context={'tasks':tasks,'form':form}
+	return render(request, 'tasks/list.html',context)
+
+--------------------------------------------------now open list.html and insert code before for loop
+<form>
+	{{form.title}}
+	<input type="submit", value="Submit">
+</form>
+
+--------------------------------------------------now visit site you should be able to see a basic form
+				//now we should be able to use the form to create a task
+				//goto list.html and update the <form>.....</form> section
+<form method="POST", action="/">
+	{% csrf_token %}
+	{{form.title}}
+	<input type="submit", value="Submit">
+</form>
+
+--------------------------------------------------now open views.py and update the code
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+
+from .models import *
+from .forms import *
+# Create your views here.
+def index(request):
+	tasks=Task.objects.all()
+
+	count= tasks.count()
+	done=0
+
+	form = TaskForm()
+
+	if request.method == 'POST':
+		form = TaskForm(request.POST)
+		if form.is_valid():
+			form.save()
+
+		return redirect('/')
+
+	for task in tasks:
+		if task.finished==True:
+			done=done+1
+
+	due=count-done
+
+	context={'tasks':tasks,'form':form,'count':count,'done':done, 'due':due}
+	return render(request, 'tasks/list.html',context)
+
+--------------------------------------------------now visit site you should be able to add tasks using your form
+				// now lets add update functionality to the form
+				// create update_task.html in tasks/templates/tasks folder and add the code
+<h3>Update Task</h3>
+<form>
+	<input type="submit", value="Update">
+</form>
+
+--------------------------------------------------open views and add the following func code
+def updateTask(request,pk):
+	task=Task.objects.get(id=pk)
+	return render(request,'tasks/update_task.html')
+
+--------------------------------------------------open urls.py and update the code
+from django.urls import path
+from . import views
+urlpatterns=[
+path('',views.index, name='list'),
+path('update_task/<str:pk>/', views.updateTask, name='update_task'),
+]
+
+--------------------------------------------------open list.html and update the for loop code segment
+{% for task in tasks %}
+	<div>
+		<a href="{% url 'update_task' task.id %}">Update</a>
+		<p>{{task}}</p>
+	</div>
+{% endfor %}
+ 
+--------------------------------------------------open views.py and update code for func updateTask
+def updateTask(request, pk):
+	task=Task.objects.get(id=pk)
+	form=TaskForm(instance=task)
+
+	if request.method=='POST':
+		form=TaskForm(request.POST , instance=task)
+		if form.is_valid():
+			form.save()
+			return redirect('/')
+
+	context={'form': form}
+	return render(request,'tasks/update_task.html',context)
+
+--------------------------------------------------open update_task.html and update code
+<h3>Update Task</h3>
+<form method="POST" action="">
+	{% csrf_token %}
+	{{form}}
+	<input type="submit", value="Submit">
+</form>
+
+--------------------------------------------------now you can visit site and update a few items
+				// now lets add delete functionality
+				//create delete.html in tasks/templates/tasks folder and paste the code
+<p>Are you sure you want to delete <b>'{{item}}'</b> ?</p>
+<a href="{% url 'list' %}">Cancel</a>
+
+<form method="POST" action="">
+	{% csrf_token %}
+	<input type="submit" value="OK">
+</form>
+
+--------------------------------------------------open views.py and insert the following func code
+def deleteTask(request,pk):
+	item=Task.objects.get(id=pk)
+
+	if request.method=='POST':
+		item.delete()
+		return redirect('/')
+
+
+	context={'item': item}
+	return render(request,'tasks/delete.html',context)
+
+--------------------------------------------------open list.html and update the for loop code segment
+{% for task in tasks %}
+	<div>
+		<a href="{% url 'update_task' task.id %}">Update</a>
+		<a href="{% url 'delete' task.id %}">Delete</a>
+		<p>{{task}}</p>
+	</div>
+{% endfor %}
+--------------------------------------------------now visit site, you should be able to either delete or cancel
+				//crossing off completed items functionality
+				//open list.html and update <div>...</div> code segment
+<div>
+		<a href="{% url 'update_task' task.id %}">Update</a>
+		<a href="{% url 'delete' task.id %}">Delete</a>
+		
+		{% if task.finished == True %}
+		<strike>{{task}}</strike>
+		{% else %}
+		<span>{{task}}</span>
+		{% endif %}
+</div>
+--------------------------------------------------now visit site, you should be able to strike off the finished tasks
+
+
+
+
+--------------------------------------------------PART III [DESIGN]--------------------------------------------------
+					//open list.html and prepend the following css code
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+
+	body{
+		background-image : url('https://us.123rf.com/450wm/strawberryblossom/strawberryblossom1709/strawberryblossom170900059/85568433-background-pattern-stripe-seamless-vector-texture-green-aqua-pastel-two-tone-colors-wallpaper-backdr.jpg?ver=6');
+	}
+
+	input{
+		width: 100%;
+		padding: 12px 20px;
+		margin: 8px 0;
+		box-sizing: border-box;
+	}
+	h2 {
+		text-align: left;
+		color: MidnightBlue;
+	}
+	.submit{
+		background-color: #6BA3E8;
+	}
+
+	.center-column{
+		width:600px;
+		margin: 20px auto;
+		padding:20px;
+		background-color: #fff;
+		border-radius: 3px;
+		box-shadow: 6px 2px 30px 0px rgba(0,0,0,0.75);
+	}
+
+	.item-row{
+		background-color: #906abd;
+		margin: 10px;
+		padding: 20px;
+		border-radius: 3px;
+		color: #fff;
+		font-size: 16px;
+		box-shadow: 0px -1px 10px -4px rgba(0,0,0,0.75);
+	}
+
+</style>
+
+--------------------------------------------------then make the following changes to the html section
+
+<div class="center-column">
+	<form method="POST", action="/">
+	{% csrf_token %}
+	{{form.title}}
+	<input class="btn btn-info" type="submit", value="Submit">
+	</form>
+
+	{% for task in tasks %}
+		<div>
+			<a class="btn btn-sm btn-info" href="{% url 'update_task' task.id %}">Update</a>
+			<a class="btn btn-sm btn-danger" href="{% url 'delete' task.id %}">Delete</a>
+			
+			{% if task.finished == True %}
+			<strike>{{task}}</strike>
+			{% else %}
+			<span>{{task}}</span>
+			{% endif %}
+		</div>
+	{% endfor %}
+</div>
+
+--------------------------------------------------you can visit site to view your changes and then update the html code segment again
+
+<title>To-Do List</title>
+<div class="center-column">
+	<h2><b>To-Do List</b></h2>
+	<form method="POST", action="/">
+	{% csrf_token %}
+	{{form.title}}
+	<input class="btn btn-info" type="submit", value="Submit">
+	</form>
+
+
+	<div class="todo-list">
+		
+		{% for task in tasks %}
+			<div class="item-row">
+				<a class="btn btn-sm btn-info" href="{% url 'update_task' task.id %}">Update</a>
+				<a class="btn btn-sm btn-danger" href="{% url 'delete' task.id %}">Delete</a>
+
+				{% if task.finished == True %}
+				<strike>{{task}}</strike>
+				<a style="float:right"><p style="background-color:Green;">&nbspDone&nbsp</p></a>
+				{% else %}
+				<span>{{task}}</span>
+				<a style="float:right"><p style="background-color:Orange;">&nbsp&nbspDue&nbsp&nbsp</p></a>
+				
+				{% endif %}
+			</div>
+		{% endfor %}
+
+	</div>
+
+</div>
+
+--------------------------------------------------you can visit site to view your changes
+				// open forms.py and add the following widget code (which pre-displays text) within class TaskForm
+title = forms.CharField(widget=forms.TextInput(attrs={'placeholder':'Add new task'}))
+
+
+--------------------------------------------------now lets include a piechart using google charts
+				// open list.html and remove the last </div> then paste the following code
+{% if count != 0 %}
+
+		<div id="piechart"></div>
+
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+		<script type="text/javascript">
+			// Load google charts
+			google.charts.load('current', {'packages':['corechart']});
+			google.charts.setOnLoadCallback(drawChart);
+
+			// Draw the chart and set the chart values
+			function drawChart() {
+			  var data = google.visualization.arrayToDataTable([
+			  ['Tasks', 'Status'],
+			  ['Completed {{done}}', {{done}}],
+			  ['Pending {{due}}', {{due}}],
+			]);
+
+			  // Optional; add a title and set the width and height of the chart
+			  var options = {'title':'Daily Statistics','width':550, 'height':400, 'colors': ['Green','Orange'], 'is3D': true};
+
+			  // Display the chart inside the <div> element with id="piechart"
+			  var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+			  chart.draw(data, options);
+			}
+		</script>
+		<a style="float:right" href="https://github.com/SoniaStalance"><sub>★ SoniaStalance</sub></a>
+	{% endif %}
+</div>
+
+-------------------------------------------------- visit site to see changes then open update_task.html and update the code
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+
+	body{
+		background-image: url('https://us.123rf.com/450wm/strawberryblossom/strawberryblossom1709/strawberryblossom170900059/85568433-background-pattern-stripe-seamless-vector-texture-green-aqua-pastel-two-tone-colors-wallpaper-backdr.jpg?ver=6');
+	}
+
+	input{
+		width: 100%;
+		padding: 12px 20px;
+		margin: 8px 0;
+		box-sizing: border-box;
+	}
+
+	.submit{
+		background-color: #6BA3E8;
+	}
+
+	.center-column{
+		width:600px;
+		margin: 20px auto;
+		padding:20px;
+		background-color: #fff;
+		border-radius: 3px;
+		box-shadow: 6px 2px 30px 0px rgba(0,0,0,0.75);
+	}
+
+</style>
+
+<title>To-Do List</title>
+<div class="center-column">
+<form method="POST" action="">
+	{% csrf_token %}
+	
+	{{form.title}}
+	<a style="float:left"><b>&nbspMark as completed</b>{{form.finished}}</a>
+	
+	<input class="btn btn-info" type="submit", value="Update">
+</form>
+</div>
+
+-------------------------------------------------- visit site and try to update any task to see changes then open delete.html and update the code
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<style>
+
+	body{
+		background-image: url('https://us.123rf.com/450wm/strawberryblossom/strawberryblossom1709/strawberryblossom170900059/85568433-background-pattern-stripe-seamless-vector-texture-green-aqua-pastel-two-tone-colors-wallpaper-backdr.jpg?ver=6');
+	}
+
+	input{
+		width: 13%;
+		padding: 12px 20px;
+		margin: 8px 0;
+		box-sizing: border-box;
+	}
+
+	.submit{
+		background-color: #6BA3E8;
+	}
+
+	.center-column{
+		width:600px;
+		margin: 20px auto;
+		padding:20px;
+		background-color: #fff;
+		border-radius: 3px;
+		box-shadow: 6px 2px 30px 0px rgba(0,0,0,0.75);
+	}
+
+</style>
+
+<title>To-Do List</title>
+<div class="center-column">
+	<label>Are you sure you want to delete <b>'{{item}}'</b> ?</label><br>
+	<a class="btn btn-info" href="{% url 'list' %}">Cancel</a>
+
+	<form method="POST" action="">
+		{% csrf_token %}
+		<input class="btn btn-danger" type="submit" value="OK">
+	</form>
+</div>
+
+-------------------------------------------------- visit site and try to delete any task to see changes
+				//your todo list is now ready!
+
+
+
+
+
+
+
+
+
+
+
+
+
+

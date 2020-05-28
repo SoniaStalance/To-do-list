@@ -1,0 +1,41 @@
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+
+	body{
+		background-image: url('https://us.123rf.com/450wm/strawberryblossom/strawberryblossom1709/strawberryblossom170900059/85568433-background-pattern-stripe-seamless-vector-texture-green-aqua-pastel-two-tone-colors-wallpaper-backdr.jpg?ver=6');
+	}
+
+	input{
+		width: 100%;
+		padding: 12px 20px;
+		margin: 8px 0;
+		box-sizing: border-box;
+	}
+
+	.submit{
+		background-color: #6BA3E8;
+	}
+
+	.center-column{
+		width:600px;
+		margin: 20px auto;
+		padding:20px;
+		background-color: #fff;
+		border-radius: 3px;
+		box-shadow: 6px 2px 30px 0px rgba(0,0,0,0.75);
+	}
+
+</style>
+
+<title>To-Do List</title>
+<div class="center-column">
+<form method="POST" action="">
+	{% csrf_token %}
+	
+	{{form.title}}
+	<a style="float:left"><b>&nbspMark as completed</b>{{form.finished}}</a>
+	
+	<input class="btn btn-info" type="submit", value="Update">
+</form>
+</div>
